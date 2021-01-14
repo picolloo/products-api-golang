@@ -14,10 +14,10 @@ import (
 type Product struct {
 	ID int 	`json:"id"`
 	Name string `json:"name"`
-	Price float32 `json:"Price"`
+	Price float32 `json:"price"`
 }
 
-var Products []Product
+var Products []*Product
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello there")
@@ -41,7 +41,7 @@ func handleGetProduct(w http.ResponseWriter, r *http.Request) {
 func handlePostProduct(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	
-	var product Product
+	var product *Product
 	json.Unmarshal(body, &product)
 	product.ID = len(Products)+1
 
@@ -54,10 +54,12 @@ func handlePutProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
 	
 	for _, product := range Products {
 		if product.ID == id {
 			json.Unmarshal(body, &product)
+			fmt.Print(product)
 			json.NewEncoder(w).Encode(product)
 			return
 		}
@@ -89,14 +91,14 @@ func handleRequests() {
 	router.HandleFunc("/products", handleGetProducts).Methods("GET")
 	router.HandleFunc("/products", handlePostProduct).Methods("POST")
 	router.HandleFunc("/products/{id}", handleGetProduct).Methods("GET")
-	router.HandleFunc("/products/{id}", handleDeleteProduct).Methods("PUT")
+	router.HandleFunc("/products/{id}", handlePutProduct).Methods("PUT")
 	router.HandleFunc("/products/{id}", handleDeleteProduct).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":3000", router))
 }
 
 func main() {
-	Products = []Product{
+	Products = []*Product{
 		{ID: 1, Name: "table", Price: 1000},
 		{ID: 2, Name: "lighter", Price: 20},
 	}
