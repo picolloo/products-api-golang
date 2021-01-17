@@ -1,20 +1,15 @@
 package main
 
-import (
-	"log"
-	"net/http"
-
-	"github.com/picolloo/productdex/app/router"
-)
+import "os"
 
 
+func main() { 
+	app := App{}
 
-func handleRequests() {
-	router := router.Router()
-
-	log.Fatal(http.ListenAndServe(":3000", router))
-}
-
-func main() {
-	handleRequests()
+	app.Initialize(
+		os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+	)
+	app.Run(":3000")
 }
