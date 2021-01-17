@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  productdex:
+    build: .
+    ports:
+      - "3000:3000"
+    links:
+      - db_postgres
+    networks:
+      - internal
+
+  db_postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12341234
+      - POSTGRES_DATABASE=productdex
+
+networks:
+  internal:
+
+volumes:
+  db_data:
