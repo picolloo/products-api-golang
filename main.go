@@ -8,7 +8,6 @@ import (
 
 
 func main() { 
-
 	app := App{}
 
 	app.Initialize(

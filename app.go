@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,13 +12,13 @@ import (
 )
 
 type App struct {
-	router *mux.Router
-	db  *sql.DB
+	Router *mux.Router
+	DB  *sql.DB
 }
 
 
 func (app *App) Initialize(dbuser, dbpasswd, dbname string) {
-	app.router = Router()
+	app.Router = Router()
 
 	connectionString := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", dbuser, dbpasswd, dbname)
 
@@ -26,20 +27,17 @@ func (app *App) Initialize(dbuser, dbpasswd, dbname string) {
 		log.Fatal(err)
 	}
 
-	app.db = db
+	app.DB = db
 }
 
 func (app *App) Run(uri string) {
-	log.Fatal(http.ListenAndServe(uri, app.router))
+	log.Fatal(http.ListenAndServe(uri, app.Router))
 }
 
 
-
 func Router() *mux.Router {
-
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/", homePage)
 	router.HandleFunc("/products", handleGetProducts).Methods("GET")
 	router.HandleFunc("/products", handlePostProduct).Methods("POST")
 	router.HandleFunc("/products/{id}", handleGetProduct).Methods("GET")
@@ -51,13 +49,9 @@ func Router() *mux.Router {
 }
 
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprint(w, "Hello there")
-}
-
 func handleGetProducts(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Content-Type", "Application/json")
-	// json.NewEncoder(w).Encode(Products)
+	w.Header().Set("Content-Type", "Application/json")
+	json.NewEncoder(w).Encode([]*product{})
 }
 
 func handleGetProduct(w http.ResponseWriter, r *http.Request) {
