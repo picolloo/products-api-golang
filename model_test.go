@@ -18,6 +18,21 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
+func TestProductNotFound(t *testing.T) {
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/products/10", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if _, ok := m["error"]; !ok {
+		t.Errorf("Expected error key on response, got: %#v", m)
+	}
+}
 
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
