@@ -35,6 +35,33 @@ func TestProductNotFound(t *testing.T) {
 }
 
 
+func TestInsertProduct(t *testing.T) {
+	clearTable()
+
+	productName := "chair"
+	productPrice := 20.50
+	productJSON := fmt.Sprintf(`{"name": %s, "price": %f}`, productName, productPrice)
+
+	jsonBody := []byte(productJSON)
+	req, _ := http.NewRequest("POST", "/products", bytes.NewBuffer(jsonBody))
+	response := executeRequest(req)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["name"] != productName {
+		t.Errorf("Expected: %s, Got: %s", m["name"], productName)
+	}
+
+	if m["price"] != productPrice {
+		t.Errorf("Expected: %f, Got: %f", m["price"], productPrice)
+	}
+
+	// This happens because json unmarshal converts int to float when using interface{}
+	if m["id"] != 1.0 {
+		t.Errorf("Expected: '1', Got: %v", m["id"])
+	}
+}
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, req)
