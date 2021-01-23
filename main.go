@@ -1,9 +1,14 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	_ "github.com/joho/godotenv/autoload"
+)
 
 
 func main() { 
+
 	app := App{}
 
 	app.Initialize(

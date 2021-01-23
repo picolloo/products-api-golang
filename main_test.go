@@ -4,11 +4,13 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var app App
 
-func TestMain(m *testing.M) {
+func TestMain(m *testing.M) {	
 	app.Initialize(
 		os.Getenv("DB_USERNAME"),
 		os.Getenv("DB_PASSWORD"),
@@ -25,14 +27,14 @@ func TestMain(m *testing.M) {
 
 
 func ensureTableExists() {
-	if _, err := app.db.Exec(tableCreationQuery); err != nil {
+	if _, err := app.DB.Exec(tableCreationQuery); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func clearTable() {
-	app.db.Exec("DELETE FROM products")
-	app.db.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
+	app.DB.Exec("DELETE FROM products")
+	app.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
 }
 
 const tableCreationQuery = `
