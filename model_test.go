@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -34,6 +38,14 @@ func TestProductNotFound(t *testing.T) {
 	}
 }
 
+func TestProductFound(t *testing.T) {
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/products/1", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
 
 func TestInsertProduct(t *testing.T) {
 	clearTable()
@@ -45,6 +57,8 @@ func TestInsertProduct(t *testing.T) {
 	jsonBody := []byte(productJSON)
 	req, _ := http.NewRequest("POST", "/products", bytes.NewBuffer(jsonBody))
 	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
 
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
@@ -62,6 +76,68 @@ func TestInsertProduct(t *testing.T) {
 		t.Errorf("Expected: '1', Got: %v", m["id"])
 	}
 }
+
+func TestDeleteProducts(t *testing.T) {
+	clearTable()
+	addProducts(1)
+
+	req, _ := http.NewRequest("GET", "/products/1", nil)
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("DELETE", "/products/1", nil)
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("GET", "/products/1", nil)
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+}
+
+func TestUpdateProduct(t *testing.T) {
+	clearTable()
+	
+	productName := "chair"
+	productPrice := 20.50
+	productJSON := fmt.Sprintf(`{"name": %s, "price": %f}`, productName, productPrice)
+	jsonBody := []byte(productJSON)
+
+	req, _ := http.NewRequest("POST", "/products", bytes.NewBuffer(jsonBody))
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	productName = "wallet"
+	productPrice = 30
+	productJSON = fmt.Sprintf(`{"name": %s, "price": %f}`, productName, productPrice)
+	jsonBody = []byte(productJSON)
+
+	req, _ = http.NewRequest("PUT", "/products/1", bytes.NewBuffer(jsonBody))
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["name"] != productName {
+		t.Errorf("Expected %s, Got: %s", productName, m["name"])
+	}
+
+	if m["price"] != productPrice {
+		t.Errorf("Expected %f, Got: %f", productPrice, m["price"])
+	}
+
+}
+
+func addProducts(amount int) {
+	for i := 0; i <= amount; i++ {
+		app.DB.Exec("INSERT INTO products(name,price) VALUES ($1, $2)", "product" + strconv.Itoa(i), i * 10)
+	}
+}
+
+
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, req)
